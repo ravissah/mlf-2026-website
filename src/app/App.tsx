@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Navigation } from './components/Navigation';
 import { Footer } from './components/Footer';
 import { ScrollToTop } from './components/ScrollToTop';
+import { DisclaimerPopup } from './components/DisclaimerPopup';
 import { Home } from './pages/Home';
 import { AllSpeakers } from './pages/AllSpeakers';
 
@@ -16,6 +17,7 @@ export default function App() {
         </Routes>
         <Footer />
         <ScrollToTop />
+        <DisclaimerPopup />
       </div>
     </Router>
   );
