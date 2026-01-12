@@ -23,8 +23,8 @@ export function Hero() {
       />
 
       {/* Decorative Arch Top */}
-      <div className="absolute top-0 left-0 right-0 h-32 overflow-hidden">
-        <svg viewBox="0 0 1200 120" className="w-full h-full" style={{ fill: 'var(--mlf-saffron)', opacity: 0.1 }}>
+      <div className="absolute top-0 left-0 right-0 h-32 overflow-hidden w-full">
+        <svg viewBox="0 0 1200 120" className="w-full h-full" preserveAspectRatio="none" style={{ fill: 'var(--mlf-saffron)', opacity: 0.1 }}>
           <path d="M0,0 L0,60 Q300,120 600,60 T1200,60 L1200,0 Z" />
         </svg>
       </div>
@@ -163,8 +163,8 @@ export function Hero() {
       </div>
 
       {/* Decorative Arch Bottom */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 overflow-hidden">
-        <svg viewBox="0 0 1200 120" className="w-full h-full" style={{ fill: 'var(--mlf-warm-beige)' }}>
+      <div className="absolute bottom-0 left-0 right-0 h-32 overflow-hidden w-full">
+        <svg viewBox="0 0 1200 120" className="w-full h-full" preserveAspectRatio="none" style={{ fill: 'var(--mlf-warm-beige)' }}>
           <path d="M0,120 L0,60 Q300,0 600,60 T1200,60 L1200,120 Z" />
         </svg>
       </div>

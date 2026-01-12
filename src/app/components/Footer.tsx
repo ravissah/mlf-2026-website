@@ -2,10 +2,10 @@ import { Facebook, Twitter, Instagram, Youtube, Mail, Phone, MapPin } from 'luci
 
 export function Footer() {
   const socialLinks = [
-    { icon: Facebook, label: 'Facebook', href: '#' },
-    { icon: Twitter, label: 'Twitter', href: '#' },
-    { icon: Instagram, label: 'Instagram', href: '#' },
-    { icon: Youtube, label: 'YouTube', href: '#' },
+    { icon: Facebook, label: 'Facebook', href: 'https://www.facebook.com/madheshlitfest/',target:"_blank" },
+    { icon: Twitter, label: 'Twitter', href: 'https://twitter.com/madheshlitfest',target:"_blank" },
+    { icon: Instagram, label: 'Instagram', href: 'https://www.instagram.com/madheshlitfest/',target:"_blank" },
+    { icon: Youtube, label: 'YouTube', href: 'https://www.youtube.com/@madheshlitfest',target:"_blank" },
   ];
 
   const quickLinks = [
@@ -25,8 +25,8 @@ export function Footer() {
   return (
     <footer className="relative" style={{ backgroundColor: 'var(--mlf-indigo)' }}>
       {/* Decorative Wave */}
-      <div className="absolute top-0 left-0 right-0 h-16 overflow-hidden">
-        <svg viewBox="0 0 1200 120" className="w-full h-full" style={{ fill: 'var(--mlf-warm-beige)' }}>
+      <div className="absolute top-0 left-0 right-0 h-16 overflow-hidden w-full">
+        <svg viewBox="0 0 1200 120" className="w-full h-full" preserveAspectRatio="none" style={{ fill: 'var(--mlf-warm-beige)' }}>
           <path d="M0,0 L0,60 Q300,120 600,60 T1200,60 L1200,0 Z" />
         </svg>
       </div>
@@ -119,6 +119,8 @@ export function Footer() {
                     <a
                       key={index}
                       href={social.href}
+                      target={social.target}
+                      rel="noopener noreferrer"
                       className="w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110"
                       style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
                       aria-label={social.label}
