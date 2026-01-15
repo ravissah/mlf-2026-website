@@ -1,14 +1,22 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Globe, BookOpen, Mic2, Palette, ArrowLeft, Search, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Search, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { speakers, categories, Speaker } from '../data/speakersData';
+import { useSpeakers, FrontendSpeaker } from '../../hooks/useSpeakers';
+import SpeakerCard from '../components/SpeakerCard';
 
 export function AllSpeakers() {
+  const { speakers, loading, error } = useSpeakers();
   const [activeCategory, setActiveCategory] = useState('All');
-  const [selectedSpeaker, setSelectedSpeaker] = useState<Speaker | null>(null);
+  const [selectedSpeaker, setSelectedSpeaker] = useState<FrontendSpeaker | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const speakersPerPage = 8;
+
+  // Get unique categories from speakers
+  const categories = useMemo(() => {
+    const cats = ['All', ...Array.from(new Set(speakers.map(s => s.category)))];
+    return cats;
+  }, [speakers]);
 
   // Filter speakers by category and search query
   const filteredSpeakers = useMemo(() => {
@@ -27,7 +35,7 @@ export function AllSpeakers() {
     }
 
     return filtered;
-  }, [activeCategory, searchQuery]);
+  }, [speakers, activeCategory, searchQuery]);
 
   // Reset to first page when filters change
   useEffect(() => {
@@ -70,16 +78,6 @@ export function AllSpeakers() {
     return pages;
   };
 
-  const getCategoryIcon = (category: string) => {
-    switch (category) {
-      case 'Writers & Thinkers': return BookOpen;
-      case 'Performers': return Palette;
-      case 'Poets': return Mic2;
-      case 'International': return Globe;
-      default: return BookOpen;
-    }
-  };
-
   const getCategoryColor = (category: string) => {
     switch (category) {
       case 'Writers & Thinkers': return 'var(--mlf-indigo)';
@@ -89,6 +87,40 @@ export function AllSpeakers() {
       default: return 'var(--mlf-indigo)';
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen pt-20 flex items-center justify-center" style={{ backgroundColor: 'var(--mlf-warm-beige)' }}>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{ borderColor: 'var(--mlf-saffron)' }}></div>
+          <p style={{ color: 'var(--mlf-text-primary)' }}>Loading speakers...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen pt-20 flex items-center justify-center" style={{ backgroundColor: 'var(--mlf-warm-beige)' }}>
+        <div className="text-center max-w-md">
+          <div className="w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(244, 67, 54, 0.1)' }}>
+            <span className="text-4xl">⚠️</span>
+          </div>
+          <h3 className="text-xl font-bold mb-2" style={{ color: 'var(--mlf-indigo)' }}>
+            Error Loading Speakers
+          </h3>
+          <p style={{ color: 'var(--mlf-text-secondary)' }}>{error}</p>
+          <Link 
+            to="/"
+            className="inline-block mt-6 px-6 py-3 rounded-lg font-semibold text-white transition-all hover:scale-105"
+            style={{ backgroundColor: 'var(--mlf-saffron)' }}
+          >
+            Back to Home
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen pt-20" style={{ backgroundColor: 'var(--mlf-warm-beige)' }}>
@@ -186,86 +218,13 @@ export function AllSpeakers() {
         {currentSpeakers.length > 0 ? (
           <div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
-              {currentSpeakers.map((speaker, index) => {
-                const Icon = getCategoryIcon(speaker.category);
-                const color = getCategoryColor(speaker.category);
-
-                return (
-                  <div
-                    key={index}
-                    onClick={() => setSelectedSpeaker(speaker)}
-                    className="group relative overflow-hidden rounded-2xl cursor-pointer transition-all hover:scale-105 hover:shadow-2xl"
-                    style={{ backgroundColor: 'white' }}
-                  >
-                    {/* Photo Placeholder */}
-                    <div 
-                      className="aspect-square flex items-center justify-center relative overflow-hidden"
-                      style={{ backgroundColor: `${color}10` }}
-                    >
-                      <div 
-                        className="w-32 h-32 rounded-full flex items-center justify-center"
-                        style={{ backgroundColor: `${color}20` }}
-                      >
-                        <span 
-                          className="text-5xl font-bold"
-                          style={{ color }}
-                        >
-                          {speaker.name.charAt(0)}
-                        </span>
-                      </div>
-                      
-                      {/* Category Icon Badge */}
-                      <div 
-                        className="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center"
-                        style={{ backgroundColor: 'white' }}
-                      >
-                        <Icon size={20} style={{ color }} />
-                      </div>
-                    </div>
-
-                    {/* Info */}
-                    <div className="p-5">
-                      <h3 
-                        className="font-bold text-lg mb-1"
-                        style={{ color: 'var(--mlf-indigo)' }}
-                      >
-                        {speaker.name}
-                      </h3>
-                      {speaker.nameNp && (
-                        <p 
-                          className="text-sm devanagari mb-2"
-                          style={{ color }}
-                        >
-                          {speaker.nameNp}
-                        </p>
-                      )}
-                      <p 
-                        className="text-sm mb-2"
-                        style={{ color: 'var(--mlf-text-secondary)' }}
-                      >
-                        {speaker.domain}
-                      </p>
-                      <div className="flex items-center justify-between">
-                        <span 
-                          className="text-xs font-medium px-3 py-1 rounded-full"
-                          style={{ 
-                            backgroundColor: `${color}15`,
-                            color 
-                          }}
-                        >
-                          {speaker.country}
-                        </span>
-                        <span 
-                          className="text-xs group-hover:translate-x-1 transition-transform"
-                          style={{ color }}
-                        >
-                          View Bio →
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+              {currentSpeakers.map((speaker, index) => (
+                <SpeakerCard
+                  key={speaker.name + index}
+                  speaker={speaker}
+                  onClick={() => setSelectedSpeaker(speaker)}
+                />
+              ))}
             </div>
 
             {/* Pagination */}

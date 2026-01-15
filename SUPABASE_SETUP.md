@@ -49,6 +49,7 @@ CREATE TABLE IF NOT EXISTS speakers (
   country TEXT NOT NULL,
   category TEXT NOT NULL,
   bio TEXT NOT NULL,
+  photo_url TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -164,12 +165,28 @@ CREATE POLICY "Allow public read" ON partners
   USING (true);
 ```
 
+## 8. Add photo_url Column (If Table Already Exists)
+
+If you created the `speakers` table before the `photo_url` column was added, you need to run this migration:
+
+1. Go to **SQL Editor** → **New Query**
+2. Run the migration script from `scripts/add_photo_url_column.sql`:
+
+```sql
+-- Add photo_url column if it doesn't exist
+ALTER TABLE speakers 
+ADD COLUMN IF NOT EXISTS photo_url TEXT;
+```
+
+This will add the `photo_url` column to your existing table without affecting existing data.
+
 ## Troubleshooting
 
 - **"Invalid API key"**: Make sure your `.env` file has the correct values
 - **"Table does not exist"**: Run the SQL commands in the Supabase SQL Editor
 - **"Permission denied"**: Check that Row Level Security policies are set up correctly
 - **Can't log in**: Verify the user exists in Authentication → Users
+- **"Could not find the 'photo_url' column"**: Run the migration script above to add the column
 
 ## Next Steps
 

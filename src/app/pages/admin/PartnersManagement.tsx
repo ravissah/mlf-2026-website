@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import { supabase, Partner } from '../../../lib/supabase';
-import { Plus, Edit, Trash2, ArrowLeft, Save, X } from 'lucide-react';
+import { Plus, ArrowLeft, Save, X, ExternalLink } from 'lucide-react';
+import { SearchBar } from '../../components/admin/SearchBar';
+import { DataTable, Column } from '../../components/admin/DataTable';
 
 const categories = [
   'Organized By',
@@ -13,8 +15,9 @@ const categories = [
 ];
 
 export function PartnersManagement() {
-  const { signOut } = useAuth();
+  const { } = useAuth();
   const [partners, setPartners] = useState<Partner[]>([]);
+  const [filteredPartners, setFilteredPartners] = useState<Partner[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -38,14 +41,121 @@ export function PartnersManagement() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setPartners(data || []);
+      const partnersData = data || [];
+      setPartners(partnersData);
+      setFilteredPartners(partnersData);
     } catch (error: any) {
-      console.error('Error loading partners:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error loading partners:', error);
+      }
       alert('Error loading partners: ' + error.message);
     } finally {
       setLoading(false);
     }
   };
+
+  const handleSearch = (query: string) => {
+    if (!query.trim()) {
+      setFilteredPartners(partners);
+      return;
+    }
+
+    const lowerQuery = query.toLowerCase();
+    const filtered = partners.filter((partner) => {
+      return (
+        partner.name.toLowerCase().includes(lowerQuery) ||
+        (partner.name_np && partner.name_np.includes(query)) ||
+        partner.category.toLowerCase().includes(lowerQuery) ||
+        (partner.website_url && partner.website_url.toLowerCase().includes(lowerQuery))
+      );
+    });
+    setFilteredPartners(filtered);
+  };
+
+  const columns: Column<Partner>[] = [
+    {
+      key: 'logo_url',
+      label: 'Logo',
+      sortable: false,
+      render: (partner: Partner) => (
+        <div className="flex items-center">
+          {partner.logo_url ? (
+            <img
+              src={partner.logo_url}
+              alt={partner.name}
+              className="w-12 h-12 object-contain rounded"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = 'none';
+              }}
+            />
+          ) : (
+            <div 
+              className="w-12 h-12 rounded flex items-center justify-center font-bold"
+              style={{ backgroundColor: 'var(--mlf-warm-beige)', color: 'var(--mlf-indigo)' }}
+            >
+              {partner.name.charAt(0)}
+            </div>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'name',
+      label: 'Name',
+      sortable: true,
+      render: (partner: Partner) => (
+        <div>
+          <div className="font-semibold" style={{ color: 'var(--mlf-indigo)' }}>
+            {partner.name}
+          </div>
+          {partner.name_np && (
+            <div className="text-sm devanagari" style={{ color: 'var(--mlf-saffron)' }}>
+              {partner.name_np}
+            </div>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'category',
+      label: 'Category',
+      sortable: true,
+      render: (partner: Partner) => (
+        <span 
+          className="px-2 py-1 rounded text-xs font-semibold"
+          style={{ 
+            backgroundColor: 'var(--mlf-warm-beige)', 
+            color: 'var(--mlf-indigo)' 
+          }}
+        >
+          {partner.category}
+        </span>
+      ),
+    },
+    {
+      key: 'website_url',
+      label: 'Website',
+      sortable: false,
+      render: (partner: Partner) => (
+        <div>
+          {partner.website_url ? (
+            <a
+              href={partner.website_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 text-sm transition-all hover:opacity-80"
+              style={{ color: 'var(--mlf-saffron)' }}
+            >
+              <span>Visit</span>
+              <ExternalLink size={14} />
+            </a>
+          ) : (
+            <span className="text-sm" style={{ color: 'var(--mlf-text-muted)' }}>—</span>
+          )}
+        </div>
+      ),
+    },
+  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,7 +181,9 @@ export function PartnersManagement() {
       await loadPartners();
       resetForm();
     } catch (error: any) {
-      console.error('Error saving partner:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error saving partner:', error);
+      }
       alert('Error saving partner: ' + error.message);
     }
   };
@@ -100,7 +212,9 @@ export function PartnersManagement() {
       if (error) throw error;
       await loadPartners();
     } catch (error: any) {
-      console.error('Error deleting partner:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error deleting partner:', error);
+      }
       alert('Error deleting partner: ' + error.message);
     }
   };
@@ -292,91 +406,43 @@ export function PartnersManagement() {
           </div>
         )}
 
-        {/* Partners List by Category */}
-        {categories.map((category) => {
-          const categoryPartners = partners.filter((p) => p.category === category);
-          if (categoryPartners.length === 0) return null;
+        {/* Search Bar */}
+        <SearchBar 
+          onSearch={handleSearch}
+          placeholder="Search partners by name, category, or website..."
+          minLength={2}
+        />
 
-          return (
-            <div key={category} className="mb-8">
-              <h2 className="text-2xl font-bold mb-4" style={{ color: 'var(--mlf-indigo)' }}>
-                {category}
-              </h2>
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {categoryPartners.map((partner) => (
-                  <div
-                    key={partner.id}
-                    className="p-6 rounded-2xl transition-all hover:shadow-lg"
-                    style={{ backgroundColor: 'white' }}
-                  >
-                    <div className="mb-4">
-                      {partner.logo_url ? (
-                        <img
-                          src={partner.logo_url}
-                          alt={partner.name}
-                          className="w-20 h-20 object-contain mb-4 mx-auto"
-                        />
-                      ) : (
-                        <div 
-                          className="w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center"
-                          style={{ backgroundColor: 'var(--mlf-warm-beige)' }}
-                        >
-                          <span className="text-2xl font-bold" style={{ color: 'var(--mlf-indigo)' }}>
-                            {partner.name.charAt(0)}
-                          </span>
-                        </div>
-                      )}
-                      <h3 className="text-lg font-bold mb-1 text-center" style={{ color: 'var(--mlf-indigo)' }}>
-                        {partner.name}
-                      </h3>
-                      {partner.name_np && (
-                        <p className="text-sm devanagari mb-2 text-center" style={{ color: 'var(--mlf-saffron)' }}>
-                          {partner.name_np}
-                        </p>
-                      )}
-                      {partner.website_url && (
-                        <a
-                          href={partner.website_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-center block mb-2"
-                          style={{ color: 'var(--mlf-saffron)' }}
-                        >
-                          Visit Website →
-                        </a>
-                      )}
-                    </div>
-                    <div className="flex space-x-2 pt-4 border-t" style={{ borderColor: 'var(--mlf-divider)' }}>
-                      <button
-                        onClick={() => handleEdit(partner)}
-                        className="flex-1 flex items-center justify-center space-x-1 px-4 py-2 rounded-lg transition-all hover:scale-105"
-                        style={{ backgroundColor: 'rgba(63, 81, 181, 0.1)', color: 'var(--mlf-indigo)' }}
-                      >
-                        <Edit size={16} />
-                        <span className="text-sm">Edit</span>
-                      </button>
-                      <button
-                        onClick={() => partner.id && handleDelete(partner.id)}
-                        className="flex items-center justify-center px-4 py-2 rounded-lg transition-all hover:scale-105"
-                        style={{ backgroundColor: 'rgba(244, 67, 54, 0.1)', color: '#f44336' }}
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+        {/* Partners Table */}
+        <DataTable
+          data={filteredPartners.filter((p): p is Partner & { id: string } => !!p.id)}
+          columns={columns}
+          onEdit={handleEdit}
+          onDelete={(partner) => partner.id && handleDelete(partner.id)}
+          emptyMessage={
+            <div>
+              <div className="w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--mlf-warm-beige)' }}>
+                <span className="text-4xl">🤝</span>
               </div>
+              <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--mlf-indigo)' }}>
+                No partners found
+              </h3>
+              <p className="mb-6" style={{ color: 'var(--mlf-text-secondary)' }}>
+                Get started by adding your first partner
+              </p>
+              <button
+                onClick={() => {
+                  resetForm();
+                  setShowForm(true);
+                }}
+                className="px-6 py-3 rounded-lg font-semibold text-white transition-all hover:scale-105"
+                style={{ backgroundColor: 'var(--mlf-saffron)' }}
+              >
+                Add Partner
+              </button>
             </div>
-          );
-        })}
-
-        {partners.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-lg mb-4" style={{ color: 'var(--mlf-text-secondary)' }}>
-              No partners found. Add your first partner!
-            </p>
-          </div>
-        )}
+          }
+        />
       </div>
     </div>
   );
